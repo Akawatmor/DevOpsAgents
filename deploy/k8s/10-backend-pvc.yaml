@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backend-data
+  namespace: devopsagents
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path   # k3s default
+  resources:
+    requests:
+      storage: 1Gi

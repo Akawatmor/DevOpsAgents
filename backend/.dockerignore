@@ -1,0 +1,8 @@
+*.db
+*.db-journal
+auth.db
+coverage.out
+internal/**/*_test.go
+.git
+.gitignore
+README.md

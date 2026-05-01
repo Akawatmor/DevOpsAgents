@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: devopsagents
+  labels: { app: backend }
+spec:
+  replicas: 1                    # SQLite RWO → 1 replica เท่านั้น
+  strategy:
+    type: Recreate               # เพื่อไม่ให้แย่ง mount PVC
+  selector:
+    matchLabels: { app: backend }
+  template:
+    metadata:
+      labels: { app: backend }
+    spec:
+      containers:
+        - name: backend
+          image: kongakawat/devopsagents-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DB_PATH
+              value: /data/auth.db
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: JWT_SECRET
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet: { path: /api/health, port: 8080 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /api/health, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests: { cpu: "50m", memory: "32Mi" }
+            limits:   { cpu: "500m", memory: "128Mi" }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: backend-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: devopsagents
+spec:
+  selector: { app: backend }
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http

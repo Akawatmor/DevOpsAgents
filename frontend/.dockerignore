@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+__tests__
+coverage
+.env*
+!.env.example
+.git
+README.md

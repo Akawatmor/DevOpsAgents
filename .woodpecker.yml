@@ -1,0 +1,112 @@
+# Woodpecker 3.x syntax
+when:
+  - event: [push, pull_request]
+    branch: [main, develop]
+  - event: manual
+
+variables:
+  - &dh_user { from_secret: dockerhub_username }
+  - &dh_pass { from_secret: dockerhub_token }
+
+steps:
+  # ─────────────────────────────────────────────────────────────
+  # 1) Test backend
+  # ─────────────────────────────────────────────────────────────
+  test-backend:
+    image: golang:1.25-alpine
+    environment:
+      GOTOOLCHAIN: local
+    commands:
+      - apk add --no-cache git build-base
+      - cd backend
+      - go vet ./...
+      - go test -race -v ./...
+
+  # ─────────────────────────────────────────────────────────────
+  # 2) Test frontend
+  # ─────────────────────────────────────────────────────────────
+  test-frontend:
+    image: oven/bun:1
+    commands:
+      - cd frontend
+      - bun install --frozen-lockfile
+      - bunx tsc --noEmit
+      - bun test
+
+  # ─────────────────────────────────────────────────────────────
+  # 3) Build & push backend image (เฉพาะ main)
+  # ─────────────────────────────────────────────────────────────
+  build-backend:
+    image: woodpeckerci/plugin-docker-buildx
+    settings:
+      repo: kongakawat/devopsagents-backend
+      dockerfile: backend/Dockerfile
+      context: backend
+      platforms: linux/amd64
+      tags:
+        - latest
+        - "${CI_COMMIT_SHA:0:8}"
+      username: *dh_user
+      password: *dh_pass
+    depends_on: [test-backend]
+    when:
+      - event: push
+        branch: main
+
+  # ─────────────────────────────────────────────────────────────
+  # 4) Build & push frontend image (เฉพาะ main)
+  # ─────────────────────────────────────────────────────────────
+  build-frontend:
+    image: woodpeckerci/plugin-docker-buildx
+    settings:
+      repo: kongakawat/devopsagents-frontend
+      dockerfile: frontend/Dockerfile
+      context: frontend
+      platforms: linux/amd64
+      tags:
+        - latest
+        - "${CI_COMMIT_SHA:0:8}"
+      build_args:
+        - NEXT_PUBLIC_API_URL=https://devopsagent.akawatmor.com
+      username: *dh_user
+      password: *dh_pass
+    depends_on: [test-frontend]
+    when:
+      - event: push
+        branch: main
+
+  # ─────────────────────────────────────────────────────────────
+  # 5) Deploy to k3s (apply manifests + rolling update)
+  # ─────────────────────────────────────────────────────────────
+  deploy:
+    image: bitnami/kubectl:1.30
+    environment:
+      KUBECONFIG_CONTENT:
+        from_secret: kubeconfig
+      IMAGE_TAG: "${CI_COMMIT_SHA:0:8}"
+    commands:
+      - mkdir -p $HOME/.kube
+      - echo "$KUBECONFIG_CONTENT" > $HOME/.kube/config
+      - chmod 600 $HOME/.kube/config
+
+      # 5.1) Apply all non-secret manifests (idempotent IaC)
+      - kubectl apply -f deploy/k8s/00-namespace.yaml
+      - kubectl apply -f deploy/k8s/10-backend-pvc.yaml
+      - kubectl apply -f deploy/k8s/11-backend.yaml
+      - kubectl apply -f deploy/k8s/12-frontend.yaml
+      - kubectl apply -f deploy/k8s/20-ingress.yaml
+
+      # 5.2) Pin to current commit SHA (rolling update)
+      - kubectl -n devopsagents set image deployment/backend  backend=kongakawat/devopsagents-backend:$IMAGE_TAG
+      - kubectl -n devopsagents set image deployment/frontend frontend=kongakawat/devopsagents-frontend:$IMAGE_TAG
+
+      # 5.3) Wait for rollout
+      - kubectl -n devopsagents rollout status deployment/backend  --timeout=120s
+      - kubectl -n devopsagents rollout status deployment/frontend --timeout=120s
+
+      # 5.4) Smoke test
+      - kubectl -n devopsagents get pods,svc,ingress
+    depends_on: [build-backend, build-frontend]
+    when:
+      - event: push
+        branch: main
