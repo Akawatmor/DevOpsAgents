@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: kongakawat/devopsagents-backend:latest
+          image: akawatmor/devopsagents-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

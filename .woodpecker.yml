@@ -39,7 +39,7 @@ steps:
   build-backend:
     image: woodpeckerci/plugin-docker-buildx
     settings:
-      repo: kongakawat/devopsagents-backend
+      repo: akawatmor/devopsagents-backend
       dockerfile: backend/Dockerfile
       context: backend
       platforms: linux/amd64
@@ -59,7 +59,7 @@ steps:
   build-frontend:
     image: woodpeckerci/plugin-docker-buildx
     settings:
-      repo: kongakawat/devopsagents-frontend
+      repo: akawatmor/devopsagents-frontend
       dockerfile: frontend/Dockerfile
       context: frontend
       platforms: linux/amd64
@@ -97,8 +97,8 @@ steps:
       - kubectl apply -f deploy/k8s/20-ingress.yaml
 
       # 5.2) Pin to current commit SHA (rolling update)
-      - kubectl -n devopsagents set image deployment/backend  backend=kongakawat/devopsagents-backend:$IMAGE_TAG
-      - kubectl -n devopsagents set image deployment/frontend frontend=kongakawat/devopsagents-frontend:$IMAGE_TAG
+      - kubectl -n devopsagents set image deployment/backend  backend=akawatmor/devopsagents-backend:$IMAGE_TAG
+      - kubectl -n devopsagents set image deployment/frontend frontend=akawatmor/devopsagents-frontend:$IMAGE_TAG
 
       # 5.3) Wait for rollout
       - kubectl -n devopsagents rollout status deployment/backend  --timeout=120s

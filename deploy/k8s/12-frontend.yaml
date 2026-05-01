@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: kongakawat/devopsagents-frontend:latest
+          image: akawatmor/devopsagents-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

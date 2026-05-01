@@ -208,7 +208,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: kongakawat/devopsagents-backend:latest
+          image: akawatmor/devopsagents-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -272,7 +272,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: kongakawat/devopsagents-frontend:latest
+          image: akawatmor/devopsagents-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -384,7 +384,7 @@ steps:
   build-backend:
     image: woodpeckerci/plugin-docker-buildx
     settings:
-      repo: kongakawat/devopsagents-backend
+      repo: akawatmor/devopsagents-backend
       dockerfile: backend/Dockerfile
       context: backend
       platforms: linux/amd64
@@ -404,7 +404,7 @@ steps:
   build-frontend:
     image: woodpeckerci/plugin-docker-buildx
     settings:
-      repo: kongakawat/devopsagents-frontend
+      repo: akawatmor/devopsagents-frontend
       dockerfile: frontend/Dockerfile
       context: frontend
       platforms: linux/amd64
@@ -442,8 +442,8 @@ steps:
       - kubectl apply -f deploy/k8s/20-ingress.yaml
 
       # 5.2) Pin to current commit SHA (rolling update)
-      - kubectl -n devopsagents set image deployment/backend  backend=kongakawat/devopsagents-backend:$IMAGE_TAG
-      - kubectl -n devopsagents set image deployment/frontend frontend=kongakawat/devopsagents-frontend:$IMAGE_TAG
+      - kubectl -n devopsagents set image deployment/backend  backend=akawatmor/devopsagents-backend:$IMAGE_TAG
+      - kubectl -n devopsagents set image deployment/frontend frontend=akawatmor/devopsagents-frontend:$IMAGE_TAG
 
       # 5.3) Wait for rollout
       - kubectl -n devopsagents rollout status deployment/backend  --timeout=120s
@@ -470,7 +470,7 @@ steps:
 
 | Name | Value | Events |
 |---|---|---|
-| `dockerhub_username` | `kongakawat` | `push` |
+| `dockerhub_username` | `akawatmor` | `push` |
 | `dockerhub_token` | `dckr_pat_xxx...` | `push` |
 | `kubeconfig` | เนื้อหาทั้งไฟล์ `~/.kube/config` | `push` |
 
@@ -500,8 +500,8 @@ cd DevOpsAgents
 
 # 1) build & push images ครั้งแรก
 docker login
-docker buildx build --platform linux/amd64 -t kongakawat/devopsagents-backend:latest  -f backend/Dockerfile  backend  --push
-docker buildx build --platform linux/amd64 -t kongakawat/devopsagents-frontend:latest -f frontend/Dockerfile frontend \
+docker buildx build --platform linux/amd64 -t akawatmor/devopsagents-backend:latest  -f backend/Dockerfile  backend  --push
+docker buildx build --platform linux/amd64 -t akawatmor/devopsagents-frontend:latest -f frontend/Dockerfile frontend \
   --build-arg NEXT_PUBLIC_API_URL=https://devopsagent.akawatmor.com --push
 
 # 2) apply manifests
@@ -548,7 +548,7 @@ curl https://devopsagent.akawatmor.com/api/health
 | **CI/CD Pipeline** | `.woodpecker.yml` (test → build → push → deploy) |
 | **Containers** | Multi-stage Dockerfile ทั้ง 2 service + distroless/alpine runtime |
 | **IaC** | `deploy/k8s/*.yaml` — declarative, idempotent, version-controlled |
-| Container registry | Docker Hub (`kongakawat/devopsagents-*`) |
+| Container registry | Docker Hub (`akawatmor/devopsagents-*`) |
 | Orchestrator | k3s (single node) |
 | Ingress | nginx → `devopsagent.akawatmor.com` |
 | Storage | PVC (`local-path`, 1Gi) สำหรับ SQLite |
