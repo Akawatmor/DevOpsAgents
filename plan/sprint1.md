@@ -6,45 +6,51 @@
 
 ```
 DevOpsAgents/
+.
 ├── README.md
-├── backend/
+├── backend
+│   ├── auth.db
 │   ├── go.mod
 │   ├── go.sum
-│   ├── main.go
-│   ├── .env.example
-│   └── internal/
-│       ├── auth/
-│       │   ├── handler.go
-│       │   ├── service.go
-│       │   ├── password.go
-│       │   ├── password_test.go
-│       │   └── handler_test.go
-│       ├── storage/
-│       │   └── storage.go
-│       └── middleware/
-│           └── cors.go
-├── frontend/
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── next.config.ts
-│   ├── bunfig.toml
-│   ├── .env.local.example
-│   ├── app/
-│   │   ├── layout.tsx
+│   ├── internal
+│   │   ├── auth
+│   │   │   ├── handler.go
+│   │   │   ├── handler_test.go
+│   │   │   ├── password.go
+│   │   │   ├── password_test.go
+│   │   │   └── service.go
+│   │   ├── middleware
+│   │   │   └── cors.go
+│   │   └── storage
+│   │       └── storage.go
+│   └── main.go
+├── checkpassword.py
+├── frontend
+│   ├── __tests__
+│   │   └── validation.test.ts
+│   ├── app
+│   │   ├── dashboard
+│   │   │   └── page.tsx
 │   │   ├── globals.css
-│   │   ├── page.tsx
-│   │   └── dashboard/
-│   │       └── page.tsx
-│   ├── lib/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── bun.lock
+│   ├── bunfig.toml
+│   ├── lib
 │   │   ├── api.ts
 │   │   └── validation.ts
-│   └── __tests__/
-│       └── validation.test.ts
-└── test/
-    └── e2e/
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+├── plan
+│   └── plan.md
+└── test
+    └── e2e
         └── auth.e2e.test.ts
-```
 
+14 directories, 28 files
+```
 ---
 
 ## 🔧 Backend (Go)
